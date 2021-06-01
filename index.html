@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html> 
+  <head>
+    <title>Processing.JS inside Webpages: Template</title> 
+  </head>
+  <body>
+	<!--This draws the canvas on the webpage -->
+    <canvas id="mycanvas"></canvas> 
+  </body>
+ 
+  <!-- Include the processing.js library -->
+  <!-- See https://khanacademy.zendesk.com/hc/en-us/articles/202260404-What-parts-of-ProcessingJS-does-Khan-Academy-support- for differences -->
+  <script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script> 
+  <script>
+  var programCode = function(processingInstance) {
+    with (processingInstance) {
+      size(400, 400); 
+      frameRate(30);
+        
+      // Paste code from Khan Academy here:
+      var AorB = "B"; //temp? mebbe.
+var schoolScheds = [];
+
+var Sphere = function(x,y,r,m,vX,vY)
+{
+    this.pos = new PVector(x,y); //position
+    this.vel = new PVector(vX,vY); //velocity
+    this.acc = new PVector(0,0); //acceleration
+    this.r = r; //radius
+    this.m = m; //mass
+    this.z = 2; //z level
+};
+
+Sphere.prototype.update = function(){
+    this.vel.add(this.acc);
+    this.pos.add(this.vel);
+    this.acc.mult(0);
+    
+};
+
+Sphere.prototype.applyForce = function(force)
+{
+    var f = PVector.div(force, this.m);
+    this.acc.add(f);
+};
+
+Sphere.prototype.display = function()
+{
+    noStroke(); fill(0,0,100);
+    ellipse(this.pos.x,this.pos.y,this.r,this.r);
+};
+
+Sphere.prototype.falltoCenter = function()
+{
+    if(this.pos.x > width/2){this.applyForce(new PVector(-0.2,0));}
+    else{this.applyForce(new PVector(0.2,0));}
+    if(this.pos.y > height/2){this.applyForce(new PVector(0,-0.2));}
+    else{this.applyForce(new PVector(0,0.2));}
+};
+
+var spheres = [];
+
+var makeNewSphere = function(x,y,r,m,vX,vY)
+{
+    spheres[spheres.length] = new Sphere(x,y,r,m,vX,vY);
+};
+
+/*=========================================================
+===========================================================
+===========================================================
+=========================================================*/
+
+var drawRange = function(start) {
+    var incAmount = 0.005; noStroke();
+    for (var t = start; t < 1*incAmount*width+start; t += incAmount) {
+        var n = noise(t);
+        var y = map(n, 0, 1, 0, height/2);
+        //line((t*100)-(start*100),height-y,(t*100)-(start*100),height*10);
+        rect(2*((t*100)-(start*100)),height-y+60,4,300);
+    }
+};
+
+/**
+Heya! Head down to the bottom for some explanation.
+*/
+
+var drawRanges = function(amount)
+{
+    for(var i = 0; i < amount; i++)
+    {
+        fill(200-(i*(255/amount)),200-(i*(255/amount)),255-(i*(255/amount)));
+        pushMatrix();
+        translate(0,(i*8)-100);
+        drawRange((amount-i)*200);
+        popMatrix();
+    }
+    
+};
+
+var drawClouds = function(start)
+{
+    var incAmount = 0.001;
+    for (var t = 0; t < width; t++) {
+        var n = noise(incAmount);
+        var y = map(n, 0, 1, 0, height/4);
+        //drawNoise();
+        stroke(200,200,200,100);
+        line(t,0,t,y);
+        incAmount += 0.005;
+    }
+};
+
+var drawGradient = function(rgb1,rgb2)
+{   
+    //Precondition: rgb1[i] >= rgb2[i]
+    strokeWeight(1);
+    for(var i = 0; i < height-height/8; i++){
+        //idea of color is to slowly transition into other rgb val
+        stroke(((rgb1[0]*((255-i*0.63)/255))+(rgb2[0]*(i*0.63/255)))  ,
+               ((rgb1[1]*((255-i*0.63)/255))+(rgb2[1]*(i*0.63/255)))  ,
+               ((rgb1[2]*((255-i*0.63)/255))+(rgb2[2]*(i*0.63/255)))  );
+        line(0,i+height/8,width,i+height/8);
+    }
+};
+
+/*=========================================================
+===========================================================
+===========================================================
+=========================================================*/
+
+var TimeTracker = function(s,e,n,d,i)
+{ //Contructor.
+    this.s = s; //start HH:MM
+    this.e = e; //end   HH:MM
+    this.n = n;    //name
+    this.d = d;    //A or B day
+    this.i = i; //to track what period it is
+};
+
+TimeTracker.prototype.pad0s = function(str,amt,right)
+{ //Pads something with 0s to its left/right. Will do left unless specified
+    str = "" + str;
+    while(str.length < amt)
+    {
+        if(!right){
+            str = "0" + str;
+        }
+        else{
+            str = str + "0";
+        }
+    }
+    return str;
+};
+
+TimeTracker.prototype.getMillis = function()
+{ //TODO: Make this track millis for this.display()
+    
+};
+
+TimeTracker.prototype.showSchedBlock = function(x,y,a)
+{ //Shows how long until a block ends once its end > time > start
+    
+        //Step 1: convert to seconds
+    var toSeconds = [0,0,0]; // [start,end,current]
+    toSeconds[0] = this.s[0]*3600 + this.s[1]*60;
+    toSeconds[1] = this.e[0]*3600 + this.e[1]*60;
+    toSeconds[2] = hour()*3600 + minute()*60 + second(); 
+    //3600 is seconds in an hour. 60 is seconds in a minute.
+
+    //Will stop executing if the schedule is already done / hasn't started yet
+    if(toSeconds[2] < toSeconds[0] || 
+       toSeconds[2] >  toSeconds[1]) {return;}
+    //if(this.i !== 3){return;}
+    
+        //Step 2: get the difference, and other calculations.
+    var secondsDuration = toSeconds[1] - toSeconds[0]; //diff
+    var percent = 100*(toSeconds[2]-toSeconds[0])/secondsDuration;//% left, 0-100
+    percent = Math.floor(percent*100)/100; //rounds it
+    
+    //reconvert to hhmmss
+    var timeLeftS = toSeconds[1]-toSeconds[2]; //time left in seconds
+    var timeLeft = [0,0,0];
+    timeLeft[0] = Math.floor(timeLeftS/3600);
+    timeLeft[1] = Math.floor(timeLeftS/60)%60;
+    timeLeft[2] = Math.floor(timeLeftS%60);
+    
+    //putting it all together
+    var finalTleft = this.pad0s(timeLeft[0],2) + ":" +
+                     this.pad0s(timeLeft[1],2) + ":" +
+                     this.pad0s(timeLeft[2],2);
+        //Step 3: display various cool things
+    
+    //the time and % left.
+    var tempPct = percent + "";
+    if(tempPct.length === 2){
+        tempPct = tempPct + ".00";
+    }
+       textSize(height/16);
+        text("Time left: " + 
+            this.pad0s(timeLeftS,4) + "\n" +
+            this.pad0s(tempPct,  5,true) + "%",
+            x,y);
+    
+    //time left in hh mm ss
+    fill(255,255,255); textSize(height/20);
+    text(finalTleft,width/2,height/2+30);
+    fill(0,0,0);
+    
+    
+    //a progress bar.
+    strokeWeight(4);
+    
+    stroke(200,0,0,a);
+    line(width/5,height/4,4*width/5,height/4);
+    
+    stroke(0,200,0,a);
+    line(width/5,height/4,((width/5)+((3*width/5)*(percent/100))),height/4);
+
+    //the A/B day
+    textSize(height/10);
+    text(AorB,width/16,height/16);
+    
+    //the next class
+    fill(255,255,255);
+    text(schoolScheds[this.i].n,width/2,7*height/8);
+};
+
+TimeTracker.prototype.display = function()
+{ //Displays the current time and nothing more.
+    //HOURS:MINUTES:SECONDS:MILLISECONDS
+    textAlign(CENTER,CENTER);
+    fill(0,0,0);
+    textSize(height/8);
+    var hr  = this.pad0s(hour()  ,2);
+    var min = this.pad0s(minute(),2);
+    var sec = this.pad0s(second(),2);
+    
+    fill(100,100,100);
+    strokeWeight(7);
+    rect(0,0,width,height/8);
+    stroke(0,0,0);
+    line(0,height/8,width,height/8);
+    quad(width/8,0,(7*width/8),0,(7*width/8)-25,height/4,width/8+25,height/4);
+    
+    
+    fill(0,0,0);
+    text(hr + ":" + min + ":" + sec,width/2,height/8);
+};
+
+var time = new TimeTracker(); //For the clock on the top
+
+//All scheds for school
+
+AorB = "B";
+    //A
+schoolScheds[0] = new TimeTracker([7,59], [8,55], "Algebra",  "A",4);
+schoolScheds[1] = new TimeTracker([8,59], [9,55], "Chemistry","A",5);
+schoolScheds[2] = new TimeTracker([9,59], [10,55],"History",  "A",6);
+schoolScheds[3] = new TimeTracker([10,59],[11,55],"Phys. Ed", "A",7);
+    //B is names only as it will replace A, for efficiency
+if(AorB === "B")
+{
+schoolScheds[0].n = "CSAEA";      schoolScheds[0].d = "B";
+schoolScheds[1].n = "Study Hall"; schoolScheds[1].d = "B";
+schoolScheds[2].n = "Web Design"; schoolScheds[2].d = "B";
+schoolScheds[3].n = "English";    schoolScheds[3].d = "B";
+}
+    //Interims
+schoolScheds[4] = new TimeTracker([8,55], [8,59], "To " + schoolScheds[1].n,"",1);
+schoolScheds[5] = new TimeTracker([9,55], [9,59], "To " + schoolScheds[2].n,"",2);
+schoolScheds[6] = new TimeTracker([10,55],[10,59],"To " + schoolScheds[3].n,"",3);
+schoolScheds[7] = new TimeTracker([11,55],[12,0], "To the bus",             "",9);
+    //Homeroom
+schoolScheds[8] = new TimeTracker([7,30],[7,45],"Pre HR" , "",9);
+schoolScheds[9] = new TimeTracker([7,45],[7,59],"Homeroom","",0);
+
+draw = function() {
+    if(spheres.length < 5 && millis()%200 < 20)
+    {
+        //spheres[spheres.length] = new Sphere(50,200,20,1,0,8);
+    }
+    
+    drawGradient([200,0,255],[0,0,155]);
+    
+    //drawRanges(5);
+    
+    for(var i = 0; i < spheres.length-1; i++){
+        if(spheres[i].pos.x > width/2+width/6){
+            spheres[i].z = 2;
+        }
+        else if(spheres[i].pos.x < width/2-width/6){
+            spheres[i].z = 1;
+        }
+        
+        if(spheres[i].z === 1){
+            //spheres[i].r = 20-(Math.abs(spheres[i].pos.x-width/2)/-20);
+            spheres[i].display();
+            spheres[i].falltoCenter();
+            //spheres[i].applyForce(new PVector(mouseX/width/100,mouseY/height/100));
+            spheres[i].update();
+        }
+    }    
+    
+    for(var i = 0; i < 20; i++){
+        fill(100-i*5,100-i*5,100-i*5);
+        ellipse(width/2,height/2+30,-(i*3)+width/4,-(i*3)+width/4);
+    }
+    for(var i = 0; i < spheres.length-1; i++){
+        if(spheres[i].z === 2){
+            spheres[i].display();
+            spheres[i].falltoCenter();
+            spheres[i].update();
+            //spheres[i].r = 20+(Math.abs(spheres[i].pos.x-width/2)/-20);
+        }
+    }
+    
+    time.display();
+    for(var i = 0; i < schoolScheds.length-1; i++){
+        schoolScheds[i].showSchedBlock(width/2,height/3,200);
+    }
+};
+    }};
+
+  // Get the canvas that ProcessingJS will use
+  var canvas = document.getElementById("mycanvas"); 
+  // Pass the function to ProcessingJS constructor
+  var processingInstance = new Processing(canvas, programCode); 
+  </script>
+</html>
