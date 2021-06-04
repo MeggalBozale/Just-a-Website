@@ -14,11 +14,11 @@
   <script>
   var programCode = function(processingInstance) {
     with (processingInstance) {
-      size(400, 400); 
-      frameRate(30);
+      size(800, 800); 
+      frameRate(60);
         
       // Paste code from Khan Academy here:
-      var AorB = "B"; //temp? mebbe.
+var AorB = "B"; //temp? mebbe.
 var schoolScheds = [];
 
 var Sphere = function(x,y,r,m,vX,vY)
@@ -157,72 +157,120 @@ TimeTracker.prototype.getMillis = function()
     
 };
 
-TimeTracker.prototype.showSchedBlock = function(x,y,a)
-{ //Shows how long until a block ends once its end > time > start
-    
-        //Step 1: convert to seconds
+TimeTracker.prototype.getToSeconds = function(){
     var toSeconds = [0,0,0]; // [start,end,current]
+    //3600 is seconds in an hour. 60 is seconds in a minute.
     toSeconds[0] = this.s[0]*3600 + this.s[1]*60;
     toSeconds[1] = this.e[0]*3600 + this.e[1]*60;
-    toSeconds[2] = hour()*3600 + minute()*60 + second(); 
-    //3600 is seconds in an hour. 60 is seconds in a minute.
+    toSeconds[2] = hour()*3600 + minute()*60 + second();
+    return toSeconds;
+    //Returns:
+    //[start time in seconds,
+    // end time in seconds,
+    // current time in seconds]
+};
 
-    //Will stop executing if the schedule is already done / hasn't started yet
-    if(toSeconds[2] < toSeconds[0] || 
-       toSeconds[2] >  toSeconds[1]) {return;}
-    //if(this.i !== 3){return;}
+TimeTracker.prototype.getTimeLeft = function(){
     
-        //Step 2: get the difference, and other calculations.
-    var secondsDuration = toSeconds[1] - toSeconds[0]; //diff
-    var percent = 100*(toSeconds[2]-toSeconds[0])/secondsDuration;//% left, 0-100
-    percent = Math.floor(percent*100)/100; //rounds it
-    
-    //reconvert to hhmmss
-    var timeLeftS = toSeconds[1]-toSeconds[2]; //time left in seconds
+    var toSeconds = this.getToSeconds();
+    //time left in seconds, [start,end,current] like above
+    var timeLeftS = toSeconds[1]-toSeconds[2];
     var timeLeft = [0,0,0];
     timeLeft[0] = Math.floor(timeLeftS/3600);
     timeLeft[1] = Math.floor(timeLeftS/60)%60;
     timeLeft[2] = Math.floor(timeLeftS%60);
+    return timeLeft;
     
-    //putting it all together
+};
+TimeTracker.prototype.showSchedBlock = function(options)
+{ //Shows SO many things. It's the crowl jewel of the program
+    
+    //set options up
+    var x = options[0];
+    var y = options[1];
+    var a = options[2];
+    var showHHMMSS = options[3];
+    var showPercentLeft = options[4];
+    var showSecondsLeft = options[5];
+    var showBar = options[6];
+    var showAB = options[7];
+    var showNext = options[8];
+    var showCurrent = options[9];
+    //I know it's not *technically* required, but I want to know
+    //what these options mean in the future, so... readability!
+    
+    //Step 1: convert to seconds
+    var toSeconds = this.getToSeconds();
+    
+    //Condition to check if curr time outside start-end time
+    if(toSeconds[2] < toSeconds[0] || 
+       toSeconds[2] >=  toSeconds[1]) {return;}
+    
+    //Step 2: get the difference, and other calculations.
+    var secondsDuration = toSeconds[1] - toSeconds[0];
+    var percent = 100*(toSeconds[2]-toSeconds[0])/secondsDuration;
+    percent = Math.floor(percent*100)/100; //rounds percent for obv reasons
+    
+    //The time left in seconds and such.
+    var timeLeftS = toSeconds[1]-toSeconds[2];
+    var timeLeft = this.getTimeLeft();
     var finalTleft = this.pad0s(timeLeft[0],2) + ":" +
                      this.pad0s(timeLeft[1],2) + ":" +
                      this.pad0s(timeLeft[2],2);
-        //Step 3: display various cool things
-    
-    //the time and % left.
     var tempPct = percent + "";
     if(tempPct.length === 2){
         tempPct = tempPct + ".00";
     }
-       textSize(height/16);
-        text("Time left: " + 
-            this.pad0s(timeLeftS,4) + "\n" +
-            this.pad0s(tempPct,  5,true) + "%",
-            x,y);
     
-    //time left in hh mm ss
-    fill(255,255,255); textSize(height/20);
-    text(finalTleft,width/2,height/2+30);
-    fill(0,0,0);
+    textSize(height/16);
     
+    //The seconds left, ex. 0395s
+    if(showSecondsLeft){
+        text("Time left: " + this.pad0s(timeLeftS,4) + "s",x,y-10);
+    }
     
-    //a progress bar.
-    strokeWeight(4);
+    //The percent left. Ex. 10.34%
+    if(showPercentLeft){
+        text(this.pad0s(Math.floor(100*(100-tempPct))/100,5,true) + "%", x, y+30);
+    }
     
-    stroke(200,0,0,a);
-    line(width/5,height/4,4*width/5,height/4);
+    //The time left, in HH:MM:SS format, like 03:45:37
+    if(showHHMMSS){
+        fill(255,255,255); textSize(height/20);
+        text(finalTleft,width/2,height/2+30);
+    }
     
-    stroke(0,200,0,a);
-    line(width/5,height/4,((width/5)+((3*width/5)*(percent/100))),height/4);
-
+    //A progress bar
+    if(showBar){
+        strokeWeight(4);
+        
+        stroke(200,0,0,a);
+        line(width/5,height/4,4*width/5,height/4);
+        
+        stroke(0,200,0,a);
+        line(width/5,height/4,((width/5)+((3*width/5)*(percent/100))),height/4);
+    }
+    
     //the A/B day
-    textSize(height/10);
-    text(AorB,width/16,height/16);
+    if(showAB){
+        fill(0,0,0);
+        textSize(height/10);
+        text(AorB,width/16,height/16);
+    }
     
-    //the next class
     fill(255,255,255);
-    text(schoolScheds[this.i].n,width/2,7*height/8);
+    textSize(30);
+    
+    //The next class
+    if(showNext){
+        text("Next: \n" + schoolScheds[this.i].n,5*width/6,height/2);
+    }
+    
+    //The current class
+    if(showCurrent){
+        text("Current: \n" + this.n,width/6,height/2);
+    }
+
 };
 
 TimeTracker.prototype.display = function()
@@ -251,11 +299,10 @@ var time = new TimeTracker(); //For the clock on the top
 
 //All scheds for school
 
-AorB = "B";
     //A
-schoolScheds[0] = new TimeTracker([7,59], [8,55], "Algebra",  "A",4);
-schoolScheds[1] = new TimeTracker([8,59], [9,55], "Chemistry","A",5);
-schoolScheds[2] = new TimeTracker([9,59], [10,55],"History",  "A",6);
+schoolScheds[0] = new TimeTracker([7,59], [8,55], "Algebra",  "A",1);
+schoolScheds[1] = new TimeTracker([8,59], [9,55], "Chemistry","A",2);
+schoolScheds[2] = new TimeTracker([9,59], [10,55],"History",  "A",3);
 schoolScheds[3] = new TimeTracker([10,59],[11,55],"Phys. Ed", "A",7);
     //B is names only as it will replace A, for efficiency
 if(AorB === "B")
@@ -266,23 +313,24 @@ schoolScheds[2].n = "Web Design"; schoolScheds[2].d = "B";
 schoolScheds[3].n = "English";    schoolScheds[3].d = "B";
 }
     //Interims
-schoolScheds[4] = new TimeTracker([8,55], [8,59], "To " + schoolScheds[1].n,"",1);
-schoolScheds[5] = new TimeTracker([9,55], [9,59], "To " + schoolScheds[2].n,"",2);
-schoolScheds[6] = new TimeTracker([10,55],[10,59],"To " + schoolScheds[3].n,"",3);
+schoolScheds[4] = new TimeTracker([8,55], [8,59], "To: " + schoolScheds[1].n,"",1);
+schoolScheds[5] = new TimeTracker([9,55], [9,59], "To: " + schoolScheds[2].n,"",2);
+schoolScheds[6] = new TimeTracker([10,55],[10,59],"To: " + schoolScheds[3].n,"",3);
 schoolScheds[7] = new TimeTracker([11,55],[12,0], "To the bus",             "",9);
     //Homeroom
 schoolScheds[8] = new TimeTracker([7,30],[7,45],"Pre HR" , "",9);
 schoolScheds[9] = new TimeTracker([7,45],[7,59],"Homeroom","",0);
-
+schoolScheds[10] = new TimeTracker([20,0],[24,0],"Night","",8);
 draw = function() {
-    if(spheres.length < 5 && millis()%200 < 20)
+    if(spheres.length < 25 && millis()%200 < 20)
     {
         //spheres[spheres.length] = new Sphere(50,200,20,1,0,8);
     }
     
-    drawGradient([200,0,255],[0,0,155]);
+    drawGradient([255,0,255],[0,0,55]);
     
-    //drawRanges(5);
+    drawRanges(15); 
+    noStroke();
     
     for(var i = 0; i < spheres.length-1; i++){
         if(spheres[i].pos.x > width/2+width/6){
@@ -315,11 +363,22 @@ draw = function() {
     }
     
     time.display();
-    for(var i = 0; i < schoolScheds.length-1; i++){
-        schoolScheds[i].showSchedBlock(width/2,height/3,200);
+    for(var i = 0; i < schoolScheds.length; i++){
+        schoolScheds[i].showSchedBlock([width/2,height/3,255,true,true,true,true,true,true,true]);
     }
 };
-    }};
+/*
+    var x = options[0];
+    var y = options[1];
+    var a = options[2];
+    var showHHMMSS = options[3];
+    var showPercentLeft = options[4];
+    var showSecondsLeft = options[5];
+    var showBar = options[6];
+    var showAB = options[7];
+    var showNext = options[8];
+    var showCurrent = options[9];
+*/
 
   // Get the canvas that ProcessingJS will use
   var canvas = document.getElementById("mycanvas"); 
