@@ -14,11 +14,11 @@
   <script>
   var programCode = function(processingInstance) {
     with (processingInstance) {
-      size(800, 800); 
-      frameRate(60);
+      size(400, 400); 
+      frameRate(1);
         
       // Paste code from Khan Academy here:
-var AorB = "B"; //temp? mebbe.
+      var AorB = "B"; //temp? mebbe.
 var schoolScheds = [];
 
 var Sphere = function(x,y,r,m,vX,vY)
@@ -367,18 +367,7 @@ draw = function() {
         schoolScheds[i].showSchedBlock([width/2,height/3,255,true,true,true,true,true,true,true]);
     }
 };
-/*
-    var x = options[0];
-    var y = options[1];
-    var a = options[2];
-    var showHHMMSS = options[3];
-    var showPercentLeft = options[4];
-    var showSecondsLeft = options[5];
-    var showBar = options[6];
-    var showAB = options[7];
-    var showNext = options[8];
-    var showCurrent = options[9];
-*/
+    }};
 
   // Get the canvas that ProcessingJS will use
   var canvas = document.getElementById("mycanvas"); 
