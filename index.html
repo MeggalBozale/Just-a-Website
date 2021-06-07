@@ -18,7 +18,7 @@
       frameRate(30);
         
       // Paste code from Khan Academy here:
-      var AorB = "B"; //temp? mebbe.
+      var AorB = "A"; //temp? mebbe.
         var schoolScheds = [];
 
 var drawRange = function(start) {
@@ -173,7 +173,7 @@ TimeTracker.prototype.showSchedBlock = function(options)
     }
     
     textSize(height/16);
-    
+    fill(255,255,255);
     //The seconds left, ex. 0395s
     if(showSecondsLeft){
         text("Time left: " + this.pad0s(timeLeftS,4) + "s",x,y-10);
@@ -248,7 +248,7 @@ TimeTracker.prototype.display = function()
 var time = new TimeTracker(); //For the clock on the top
 
 //All scheds for school
-
+/*
     //A
 schoolScheds[0] = new TimeTracker([7,59], [8,55], "Algebra",  "A",1);
 schoolScheds[1] = new TimeTracker([8,59], [9,55], "Chemistry","A",2);
@@ -271,6 +271,8 @@ schoolScheds[7] = new TimeTracker([11,55],[12,0], "To the bus",             "",9
 schoolScheds[8] = new TimeTracker([7,30],[7,45],"Pre HR" , "",9);
 schoolScheds[9] = new TimeTracker([7,45],[7,59],"Homeroom","",0);
 schoolScheds[10] = new TimeTracker([20,0],[24,0],"Night","",8);
+*/
+schoolScheds[0] = new TimeTracker([8,0],[11,55],"END OF SCHOOL WOO","A",0);
 draw = function() {
     
     drawGradient([255,0,255],[0,0,55]);
