@@ -102,9 +102,22 @@ TimeTracker.prototype.pad0s = function(str,amt,right)
     return str;
 };
 
+var prevSecond;
+var currentSecond;
+var prevMillis;
+var millisCount;
 TimeTracker.prototype.getMillis = function()
 { //TODO: Make this track millis for this.display()
-    
+    currentSecond = second();
+    if(prevSecond !== currentSecond)var prevSecond;
+var currentSecond;
+var prevMillis;
+var millisCount;{
+        prevSecond = currentSecond;
+        prevMillis = millis();
+        millisCount = 0;
+    }
+    return millis()-prevMillis;
 };
 
 TimeTracker.prototype.getToSeconds = function(){
@@ -241,8 +254,10 @@ TimeTracker.prototype.display = function()
     quad(width/8,0,(7*width/8),0,(7*width/8)-25,height/4,width/8+25,height/4);
     
     
+    textSize(width/10);
+    var millis = this.pad0s(this.getMillis(),3);
     fill(0,0,0);
-    text(hr + ":" + min + ":" + sec,width/2,height/8);
+    text(hr + ":" + min + ":" + sec + "." + millis,width/2,height/8);
 };
 
 var time = new TimeTracker(); //For the clock on the top
